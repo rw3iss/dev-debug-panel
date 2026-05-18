@@ -1,255 +1,133 @@
-# Debug Panel (dev-debug-panel)
+# dev-debug-panel
 
-A lightweight draggable, resizable, and snappable multi-tab debug panel for development, utilizing json diffing to only update its view with changed properties. Maintains view state across object updates and page reloads to easily debug them. Works with any framework (see below for examples).
+A draggable, resizable in-page debug overlay.
 
-## Features
+- **Per-id tabs** — log entries grouped by id, with a chronological `global` tab.
+- **Per-tab Copy + Clear** controls — one click, no menu diving.
+- **JSON inspection** — efficient diff-based JSON tree for state objects.
+- **Sink of dev-loggers** — drop-in integration; no event bus, no globals.
+- **Framework-agnostic** — works in vanilla JS or any framework; thin Preact helper included.
 
-- 🎯 **Draggable & Resizable** - Drag and resize the panel as needed. Supports configurable snapping options and opacity controls. View settings are preserved across page reloads. Ctrl+Alt+D to hide and show the panel.
-
-- 📊 **State Inspection** - View and track object states with JSON tree visualization. If you update an object, the view will remember it's state, allowing easier debugging.
-
-- 📝 **Multi-tab Logging** - Organize logs by namespace/category in a tabbed scrollable view for each. Copy or delete entries easily.
-
-- 🎨 **Auto-injected Styles** - SCSS styles are bundled and injected automatically
-
-- 🚀 **Framework Agnostic** - Works with any web framework or vanilla JS
-
-- 📦 **TypeScript Support** - Full type definitions included
-
-
-### Looks like this:
-<img src="./images/debug-panel-screenshot.png" style="width: 500px;"/>
-
-## Installation
+## Install
 
 ```bash
-npm install dev-debug-panel
-# or
-yarn add dev-debug-panel
+npm install dev-debug-panel dev-loggers
 ```
 
-## Quick Start
+`dev-loggers` is optional but recommended — it's the canonical `debug()`
+source and powers the per-namespace config tab.
 
-### Basic Usage (Vanilla JS/TS)
+## Quick start (vanilla)
 
-Import and instantiate a DebugPanel somewhere in your client application, then log state/objects from anywhere using the global debug method:
-```javascript
-import { DebugPanel, debug } from 'dev-debug-panel';
-
-// Create and show the debug panel
-const panel = new DebugPanel({ position: 'bottomRight' }); // or ScreenPosition.BottomRight, etc
-
-// Debug objects from anywhere in your app
-debug(obj);
-```
-
-Calls to debug(obj) will update references to the same object using a diffing algorithm. This allows debugging many or large objects more efficient, and allows for the preservation of the view state across updates.
-
-Note that each unique object that the panel draws instantiates its own JsonView tree element. Though it is an efficiently drawn element, tons of calls to debug(obj) with unique objects may be slow. In that case consider just combining the objects to a singlular wrapped object, and debugging that object, which will efficiently manage the objects in a single JsonView using diffing.
-
-You can pass an optional object identifier for the first argument, to show on the panel:
 ```typescript
-debug('config', { theme: 'dark', api: 'https://api.example.com' });
+import { DebugPanel } from 'dev-debug-panel';
+import * as loggers from 'dev-loggers';
 
-// You can also use the instance itself:
-panel.debug('user', { id: 1, name: 'John', active: true });
-
-// And add regular logs
-panel.log('api', 'Fetching user data...');
-panel.log('ui', 'Button clicked', { buttonId: 'submit' });
+new DebugPanel({ loggers });   // mounts to <body>, hidden until Shift+Alt+D
+loggers.debug('audio:attach', { tag: 'VIDEO' });
 ```
-See [examples/DebugPanelLogModule.ts](../examples/DebugPanelLogModule.ts) for an example of listening to all log events, sending them to DebugPanel automatically, and integrating with other systems.
 
-### Example: React Integration
+That's the entire integration. Anything that calls `debug(id, ...)`,
+`log(...)`, `warn(...)`, `error(...)` from dev-loggers now shows up in
+the panel, grouped by id, with the first object arg rendered as a JSON
+tree.
+
+## Preact / React
 
 ```tsx
-import { DebugPanel, debugState } from 'dev-debug-panel';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'preact/hooks';
+import { mountDebugPanel } from 'dev-debug-panel';
+import * as loggers from 'dev-loggers';
 
-function App() {
-  const panelRef = useRef<DebugPanel>();
-
-  useEffect(() => {
-    // Initialize panel
-    panelRef.current = new DebugPanel({ show: true });
-
-    // Cleanup on unmount
-    return () => {
-      panelRef.current?.hide();
-    };
-  }, []);
-
-  const handleStateUpdate = () => {
-    debugState('component-state', {
-      timestamp: Date.now(),
-      userCount: 42,
-      features: ['dark-mode', 'auto-save']
-    });
-  };
-
-  return (
-    <div>
-      <button onClick={handleStateUpdate}>Update Debug State</button>
-      {/* Your app content */}
-    </div>
-  );
+export function App() {
+    useEffect(() => mountDebugPanel({ loggers }), []);
+    return <YourApp />;
 }
 ```
 
-### Example: Integration with dev-loggers library
-If you want to show arbitrary log events to the panel, from any existing logging system, then you can create a LogModule and register it.
+`mountDebugPanel` returns the disposer so `useEffect` cleans up correctly.
 
-For example, if using the dev-loggers package, you can draw all log() calls throughout the system to this DebugPanel by implementing a LogModule, which instantiates a global DebugPanel and registers it.
+## Keyboard shortcut
 
-The LogModule will receive log events inside its onLog handler, and pass them to the DebugPanel to draw there.
+`Shift+Alt+D` toggles the panel (configurable):
 
-You can register any class which implements the onLog(log) handler with addLogModule:
 ```typescript
-import { LogModule } from 'dev-debug-panel';
-import { addLogModule } from 'dev-loggers';
-
-class DebugPanelLogModule implements LogModule {
-	public name = 'DebugPanel';
-	public panel: DebugPanel;
-
-	constructor(opts: DebugPanelOptions = {}) {
-    // this module creates a DebugPanel for the application
-		this.panel = new DebugPanel(opts);
-	}
-
-	public onLog(log: LogEvent) {
-    // global log events are then drawn to the panel
-		this.panel.log(log.namespace, log.args);
-	}
-}
-
-// Instantiate the global log module in your app and register it:
-const debugModule = new DebugPanelLogModule({
-  position: 'bottomRight',
-  width: 600,
-  height: 400
-});
-
-addLogModule(debugModule);
-
-// Now all log calls from dev-loggers will appear in the debug panel.
+new DebugPanel({ loggers, shortcut: 'ctrl+`' });   // any combo
+new DebugPanel({ loggers, shortcut: null });        // disable
 ```
 
-## API Reference
+## API
 
-### DebugPanel
-
-Main class for creating and managing the debug panel.
+### `new DebugPanel(options)`
 
 ```typescript
-import { DebugPanel, ScreenPosition } from 'dev-debug-panel';
-
-const panel = new DebugPanel({
-  show?: boolean;          // Show panel immediately (default: false)
-  position?: ScreenPosition; // Initial position (default: 'bottomRight')
-  width?: number;          // Initial width in pixels (default: 600)
-  height?: number;         // Initial height in pixels (default: 400)
-  snap?: boolean;          // Enable edge snapping when dragging (default: false)
-  snapPadding?: number;    // Snap distance in pixels (default: 20)
-});
-
-// Methods
-panel.show();           // Show the panel
-panel.hide();           // Hide the panel
-panel.toggle();         // Toggle visibility
-panel.addLog(namespace, message);    // Add log entry
-panel.debugState(id, state);        // Update state view
-```
-
-### ScreenPosition
-
-Available positions for the debug panel:
-
-```typescript
-enum ScreenPosition {
-  TopLeft = 'topLeft',
-  Top = 'top',
-  TopRight = 'topRight',
-  Right = 'right',
-  BottomRight = 'bottomRight',
-  Bottom = 'bottom',
-  BottomLeft = 'bottomLeft',
-  Left = 'left'
+interface DebugPanelOptions {
+    show?: boolean;                 // default false — respects saved settings
+    position?: ScreenPosition;       // TopLeft, TopRight, BottomLeft, BottomRight, …
+    width?: number;                  // default 600
+    height?: number;                 // default 400
+    snap?: boolean;                  // default false
+    snapPadding?: number;            // default 20
+    mount?: boolean;                 // default true (auto-append to document.body)
+    parent?: HTMLElement;            // alternative mount target
+    loggers?: LoggersApi;            // dev-loggers module (preferred wiring)
+    shortcut?: string | null;        // default 'shift+alt+d'
 }
 ```
 
-### debugState Function
+### Methods
 
-Utility function to send state updates to the debug panel from anywhere:
+| Method | Purpose |
+|--------|---------|
+| `panel.show()` / `panel.hide()` / `panel.toggle()` | Visibility. |
+| `panel.attachToLoggers(api)` | Register as a Sink and connect the config tab. |
+| `panel.debug(id, state)` | Push or update an entry in the `objects` JSON tab. |
+| `panel.log(tabId, message)` | Push a log entry (v1 compatibility). |
+| `panel.clearTab(tabId)` | Empty a tab programmatically. |
+| `panel.copyTab(tabId)` | Copy the tab's full content to clipboard. |
+| `panel.destroy()` | Tear down, unmount, detach from loggers. |
 
-```typescript
-import { debugState } from 'dev-debug-panel';
-
-debugState('unique-id', anyObject);
-```
-
-### JsonView
-
-Standalone JSON tree viewer componen. This is used by the DebugPanel internally, but can be used by itself (it will be moved to a separate library soon).
-
-It is efficient: Any calls to updateJson will update the given data using jsondiffpatch, only redrawing the properties that have changes (it uses a "mini" virtual dom).
+### Standalone `debug()`
 
 ```typescript
-import { JsonView } from 'dev-debug-panel';
-
-const jsonView = new JsonView(data, containerElement, {
-  expandAll?: boolean;              	// Expand all nodes initially
-  expandObjs?: Array<string | RegExp>;  // Patterns for auto-expanded paths
-  useViewState?: boolean;           	// Remember expand/collapse state
-});
-
-jsonView.updateJson(newData);       	// Update via diffing with new data
+import { debug } from 'dev-debug-panel';
+debug('audio:attach', { tag: 'VIDEO' });
 ```
 
-## Keyboard Shortcuts
+This is a thin convenience function that dispatches to the most-recent
+panel constructed in the page. It's there so existing code that just
+imports `debug` keeps working — but for new code, prefer `debug` from
+`dev-loggers`: it goes through the proper Sink fanout and reaches every
+panel + every other registered sink (console, network, file).
 
-- **Ctrl+Alt+D** - Toggle debug panel visibility
+## Per-id vs per-namespace tabs
 
-## Features in Detail
+`debug('audio:attach', …)` → tab `audio:attach`. `debug('audio:chain',
+…)` → separate tab `audio:chain`. Both share the **`audio`** namespace
+for the enable/disable toggle in the config tab (everything before the
+first `:`).
 
-### State Inspection
-- View complex objects in an expandable JSON tree
-- Real-time updates when state changes
-- Collapsible sections with memory of view state
-- Syntax highlighting for better readability
+`log()` / `warn()` / `error()` from dev-loggers without an `id` land in
+the namespace tab (matches v1 behaviour).
 
-### Multi-tab Logging
-- Automatic namespace-based tab creation
-- Global tab shows all logs combined
-- Per-tab clearing functionality
-- Copy individual log entries
+Every emit also flows into the chronological `global` tab.
 
-### Panel Interaction
-- Drag to reposition anywhere on screen
-- Resize from any edge or corner
-- Adjustable opacity slider
-- Persistent settings saved to localStorage
-- Responsive layout for narrow panels
+## Migration from v1
 
-## Browser Support
+| v1 | v2 |
+|----|----|
+| `new DebugPanel(opts)` auto-mounted to body | Same, plus `{ mount: false }` for custom mount. |
+| Tabs keyed by namespace | Tabs keyed by `id` (falls back to namespace). |
+| Single `Clear` button in the global toolbar | Per-tab `Copy` + `Clear` toolbar inside each tab. |
+| `Ctrl+Alt+D` shortcut | `Shift+Alt+D`, configurable via `shortcut` option. |
+| `addLogModule(panel)` from `dev-loggers` | `new DebugPanel({ loggers })`, or `panel.attachToLoggers(loggers)` later. |
+| `panel.setLoggerApi(api)` | Still works; `attachToLoggers(api)` is the new preferred form. |
+| Depended on `eventbusjs` peer | No more event bus. Dropped from peer/runtime deps. |
+| UMD output | Removed. ESM + CJS only. |
 
-- Chrome/Edge 88+
-- Firefox 85+
-- Safari 14+
-
-## TypeScript
-
-Full TypeScript support with exported types:
-
-```typescript
-import type {
-  DebugPanelOptions,
-  DebugPanelSettings,
-  JsonViewOptions,
-  ResizeOptions,
-  DragOptions
-} from 'dev-debug-panel';
-```
+The `debug(id, …)` global also still works without explicitly wiring
+the panel — but if `dev-loggers` is loaded, prefer its `debug` for full
+sink fanout.
 
 ## License
 

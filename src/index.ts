@@ -1,17 +1,16 @@
-// Import styles - these will be auto-injected when the library is used
+// Side-effect imports: style injection happens on first import of the lib.
 import './DebugPanel/DebugPanel.scss';
 import './JsonView/JsonView.scss';
 
-// Export main classes and utilities
-export { DebugPanel, ScreenPosition } from './DebugPanel/DebugPanel';
+export { DebugPanel, ScreenPosition, debug } from './DebugPanel/DebugPanel';
+export type { LoggersApi, LoggerEvent } from './DebugPanel/DebugPanel';
 export { JsonView } from './JsonView/JsonView';
-export { debug } from './DebugPanel/DebugPanel';
+export { mountDebugPanel } from './mountPreact';
 export { makeResizable, makeDraggable, getWindowSize } from './utils/domUtils';
 
-// Export types for TypeScript users
 export type {
 	DebugPanelOptions,
 	DebugPanelSettings,
 	ResizeOptions,
-	DragOptions
+	DragOptions,
 } from './types';

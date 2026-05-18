@@ -79,6 +79,66 @@
 			flex-direction: column;
 			flex: 1;
 			gap: 5px;
+			min-height: 0;
+
+			// Per-tab toolbar (Copy + Clear).
+			.debug-tab-toolbar {
+				position: sticky;
+				top: 0;
+				z-index: 2;
+				display: flex;
+				justify-content: flex-end;
+				gap: 6px;
+				padding: 6px 0;
+				background: #1a1a1a;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+				margin-bottom: 4px;
+
+				.debug-tab-action {
+					background: #2a2a2a;
+					color: #ccc;
+					border: 1px solid #333;
+					padding: 3px 8px;
+					font-size: 11px;
+					border-radius: 3px;
+					cursor: pointer;
+					display: inline-flex;
+					align-items: center;
+					gap: 4px;
+					transition:
+						background 0.15s,
+						color 0.15s,
+						border-color 0.15s;
+
+					&:hover {
+						background: #333;
+						color: #fff;
+						border-color: #444;
+					}
+
+					&:focus {
+						outline: none;
+					}
+
+					span {
+						font-size: 12px;
+						line-height: 1;
+					}
+				}
+
+				.debug-tab-action-clear:hover {
+					background: #6b2a2a;
+					border-color: #8c3333;
+					color: #fff;
+				}
+			}
+
+			.debug-tab-entries {
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+				flex: 1;
+			}
 
 			// Log Entries
 			.debug-log-entry {
@@ -103,6 +163,25 @@
 				.debug-log-entry-text {
 					flex: 1;
 					padding-right: 70px;
+				}
+
+				.debug-log-entry-data {
+					margin-top: 4px;
+					padding: 4px 6px;
+					background: #1f1f1f;
+					border-radius: 3px;
+					font-family: 'JetBrains Mono', 'SF Mono', monospace;
+					font-size: 11px;
+				}
+
+				&.debug-log-entry-error {
+					border-left-color: #ff5252;
+				}
+				&.debug-log-entry-warn {
+					border-left-color: #ffb84d;
+				}
+				&.debug-log-entry-debug {
+					border-left-color: #66b3ff;
 				}
 
 				.debug-action-button {
@@ -442,4 +521,100 @@
 			display: none;
 		}
 	}
+}
+
+// ─── Config tab ─────────────────────────────────────────
+.debug-config-wrapper {
+	padding: 8px;
+	font-size: 12px;
+}
+
+.debug-config-header {
+	display: flex;
+	gap: 6px;
+	margin-bottom: 8px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid #333;
+}
+
+.debug-config-btn {
+	background: #3b82f6;
+	color: #fff;
+	border: none;
+	border-radius: 3px;
+	padding: 4px 10px;
+	font-size: 11px;
+	cursor: pointer;
+
+	&:hover { background: #2563eb; }
+
+	&.debug-config-btn-secondary {
+		background: #444;
+		&:hover { background: #555; }
+	}
+}
+
+.debug-config-empty {
+	color: #666;
+	padding: 16px 8px;
+	text-align: center;
+}
+
+.debug-config-list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.debug-config-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 5px 8px;
+	border-radius: 3px;
+	cursor: pointer;
+
+	&:hover { background: #2a2a2a; }
+
+	&.debug-config-overridden {
+		.debug-config-label { color: #e4e4e7; }
+	}
+}
+
+.debug-config-toggle {
+	position: relative;
+	width: 32px;
+	height: 18px;
+	border-radius: 9px;
+	border: none;
+	background: #444;
+	cursor: pointer;
+	padding: 0;
+	flex-shrink: 0;
+	transition: background 0.2s;
+
+	&.debug-config-toggle-on {
+		background: #3b82f6;
+
+		.debug-config-toggle-thumb {
+			transform: translateX(14px);
+		}
+	}
+}
+
+.debug-config-toggle-thumb {
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #fff;
+	transition: transform 0.2s;
+}
+
+.debug-config-label {
+	color: #999;
+	font-family: 'JetBrains Mono', 'SF Mono', monospace;
+	font-size: 12px;
 }

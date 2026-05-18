@@ -53,39 +53,29 @@ async function build() {
       target: 'es2020',
       sourcemap: true,
       minify: true,
-      external: ['eventbusjs', 'jsondiffpatch', 'safe-stringify'],
+      external: ['jsondiffpatch', 'fast-safe-stringify'],
       plugins: [scssPlugin],
       define: {
         'process.env.NODE_ENV': '"production"'
       }
     };
 
-    // Build ESM version
+    // ESM
     await esbuild.build({
       ...buildConfig,
       outExtension: { '.js': '.esm.js' }
     });
 
-    // Build CommonJS version
+    // CJS
     await esbuild.build({
       ...buildConfig,
       format: 'cjs',
       outExtension: { '.js': '.cjs.js' }
     });
 
-    // Build UMD version for browser
-    await esbuild.build({
-      ...buildConfig,
-      format: 'esm',
-      outExtension: { '.js': '.umd.js' },
-      external: [] // Bundle all dependencies for UMD
-    });
-
-    console.log('✅ Build completed successfully!');
-    console.log('📦 Generated files:');
+    console.log('Build completed.');
     console.log('  - dist/index.esm.js (ES modules)');
     console.log('  - dist/index.cjs.js (CommonJS)');
-    console.log('  - dist/index.umd.js (UMD/Browser)');
 
   } catch (error) {
     console.error('❌ Build failed:', error);

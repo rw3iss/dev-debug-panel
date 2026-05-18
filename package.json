@@ -1,7 +1,7 @@
 {
 	"name": "dev-debug-panel",
-	"version": "1.0.3",
-	"description": "A draggable, resizable debug panel for logging and state inspection in web applications",
+	"version": "2.0.0",
+	"description": "Draggable, resizable in-page debug panel. Per-id tabs, JSON state inspection, sink integration with dev-loggers.",
 	"license": "ISC",
 	"homepage": "https://github.com/rw3iss/dev-debug-panel#readme",
 	"bugs": {
@@ -19,12 +19,10 @@
 	"type": "module",
 	"main": "dist/index.cjs.js",
 	"module": "dist/index.esm.js",
-	"browser": "dist/index.umd.js",
 	"types": "dist/index.d.ts",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"browser": "./dist/index.umd.js",
 			"import": "./dist/index.esm.js",
 			"require": "./dist/index.cjs.js"
 		}
@@ -37,8 +35,7 @@
 		"build": "node build.js && tsc --declaration --emitDeclarationOnly --outDir dist",
 		"dev": "node build.js --watch",
 		"clean": "rm -rf dist",
-		"prepublishOnly": "npm run clean && npm run build",
-		"test": "node tests/index.ts"
+		"prepublishOnly": "npm run clean && npm run build"
 	},
 	"keywords": [
 		"debug",
@@ -49,11 +46,9 @@
 		"vanilla-js"
 	],
 	"peerDependencies": {
-		"eventbusjs": "^0.2.0",
 		"jsondiffpatch": "^0.7.3"
 	},
 	"dependencies": {
-		"eventbusjs": "^0.2.0",
 		"fast-safe-stringify": "^2.1.1",
 		"jsondiffpatch": "^0.7.3"
 	},
