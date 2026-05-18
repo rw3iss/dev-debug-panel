@@ -1,6 +1,6 @@
 {
 	"name": "dev-debug-panel",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Draggable, resizable in-page debug panel. Per-id tabs, JSON state inspection, sink integration with dev-loggers.",
 	"license": "ISC",
 	"homepage": "https://github.com/rw3iss/dev-debug-panel#readme",
@@ -35,6 +35,7 @@
 		"build": "node build.js && tsc --declaration --emitDeclarationOnly --outDir dist",
 		"dev": "node build.js --watch",
 		"clean": "rm -rf dist",
+		"test": "node tests/clearTab.smoke.mjs",
 		"prepublishOnly": "npm run clean && npm run build"
 	},
 	"keywords": [
@@ -54,6 +55,7 @@
 	},
 	"devDependencies": {
 		"esbuild": "^0.21.5",
+		"jsdom": "^29.1.1",
 		"sass": "^1.93.2",
 		"typescript": "^5.0.0"
 	}

@@ -410,9 +410,9 @@ export class DebugPanel {
 		};
 		this.tabEntries[tabId]!.push(entry);
 
-		const content = this.getTabContent(tabId);
-		if (!content) return;
-		content.appendChild(this.createLogElement(entry));
+		const entries = this.getTabEntriesEl(tabId);
+		if (!entries) return;
+		entries.appendChild(this.createLogElement(entry));
 	}
 
 	private formatEventText(event: LoggerEvent): string {
@@ -446,17 +446,17 @@ export class DebugPanel {
 	}
 
 	private updateDebugState(id: string, state: any): void {
-		const content = this.getTabContent(DEBUG_STATE_NAMESPACE);
-		if (!content) return;
-		const debugWrapper: HTMLElement | null = content.querySelector(`#debug-state-${cssEscape(id)}`);
+		const entries = this.getTabEntriesEl(DEBUG_STATE_NAMESPACE);
+		if (!entries) return;
+		const debugWrapper: HTMLElement | null = entries.querySelector(`#debug-state-${cssEscape(id)}`);
 		if (!debugWrapper) return;
 		this.debugStates[id]!.state = state;
 		this.debugStates[id]!.jsonView.updateJson(state);
 	}
 
 	private addDebugState(id: string, state: any): void {
-		const content = this.getTabContent(DEBUG_STATE_NAMESPACE);
-		if (!content) return;
+		const entries = this.getTabEntriesEl(DEBUG_STATE_NAMESPACE);
+		if (!entries) return;
 
 		const debugWrapper = document.createElement('div');
 		debugWrapper.classList.add('debug-state');
@@ -488,7 +488,7 @@ export class DebugPanel {
 		const jsonView = new JsonView(state, jsonWrapper as HTMLElement, {});
 
 		this.debugStates[id] = { state, jsonView, isExpanded: true };
-		content.appendChild(debugWrapper);
+		entries.appendChild(debugWrapper);
 	}
 
 	// ─── Tab management ───────────────────────────────────────────
@@ -578,9 +578,13 @@ export class DebugPanel {
 			for (const key of Object.keys(this.debugStates)) delete this.debugStates[key];
 		}
 		const entries = this.getTabEntriesEl(tabId);
-		if (entries) entries.innerHTML = '';
+		if (entries) {
+			entries.innerHTML = '';
+			return;
+		}
+		// Fallback for tabs without an entries wrapper (shouldn't happen).
 		const content = this.getTabContent(tabId);
-		if (content && !entries) content.innerHTML = '';
+		if (content) content.innerHTML = '';
 	}
 
 	public copyTab(tabId: string): void {
